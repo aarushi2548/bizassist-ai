@@ -1,0 +1,176 @@
+.record-page {
+  min-height: 100vh;
+  background: #f5f7fb;
+  padding-bottom: 40px;
+}
+
+.record-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 25px 20px;
+  background: white;
+}
+
+.record-header p {
+  font-size: 13px;
+  color: #7b8494;
+  margin-bottom: 3px;
+}
+
+.record-header h1 {
+  font-size: 23px;
+}
+
+.back-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #f1f3f7;
+  font-size: 23px;
+}
+
+.record-content {
+  max-width: 650px;
+  margin: 25px auto;
+  padding: 0 18px;
+}
+
+.voice-card {
+  background: white;
+  border-radius: 20px;
+  padding: 45px 25px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.mic-circle {
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  margin: 0 auto 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef1ff;
+  font-size: 42px;
+}
+
+.mic-circle.recording {
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.voice-card h2 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.voice-card p {
+  color: #737d8e;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.voice-card strong {
+  color: #343c4d;
+}
+
+.record-button {
+  margin-top: 28px;
+  padding: 15px 35px;
+  border-radius: 12px;
+  background: #172033;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.record-button.active {
+  background: #c24141;
+}
+
+.transcript-card {
+  margin-top: 18px;
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.card-title h2 {
+  font-size: 17px;
+}
+
+.card-title span {
+  color: green;
+  font-weight: bold;
+}
+
+.transcript-card p {
+  background: #f5f7fb;
+  padding: 15px;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+
+.save-button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #172033;
+  color: white;
+  font-weight: bold;
+}
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 7px;
+  color: #343c4d;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #dfe3ea;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #5367d9;
+}
+
+.form-error {
+  margin-bottom: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fff1f1;
+  color: #c24141;
+  font-size: 14px;
+}
