@@ -2,7 +2,7 @@
 
 ### An AI-powered business assistant for small businesses
 
-BizAssist AI is a smart business management application designed to help small business owners manage their **orders, customers, payments, priorities, and business information** from one place.
+BizAssist AI is an AI-powered business management application designed to help small business owners manage their **orders, customers, payments, priorities, and business information** from one place.
 
 Instead of relying entirely on notebooks, physical ledgers, WhatsApp messages, and memory, BizAssist provides a simple digital workspace where owners can use **voice, AI, and visual inputs** to manage everyday business operations.
 
@@ -61,7 +61,7 @@ The goal is simple:
 
 Instead of manually typing every order, the owner can record an order using their voice.
 
-BizAssist extracts important information such as:
+BizAssist processes the voice input and extracts important information such as:
 
 * Customer name
 * Product
@@ -207,7 +207,6 @@ The objective is not to add AI simply for the sake of using AI.
 
 ### Additional Technologies
 
-* Razorpay SDK
 * Multer
 * CORS
 * dotenv
@@ -239,7 +238,7 @@ The objective is not to add AI simply for the sake of using AI.
                        │
                        ▼
               Business Dashboard
-```FF
+```
 
 ---
 
@@ -288,30 +287,30 @@ Install the following:
 * npm
 * MongoDB Atlas account
 * Gemini API credentials
-* Any other AI credentials required by the application
+* Hugging Face credentials if required by the image-analysis configuration
 
 ---
 
-## 1. Clone the repository
+## 1. Clone the Repository
 
-
+```bash
 git clone https://github.com/aarushi2548/bizassist-ai.git
 cd bizassist-ai
-
+```
 
 ---
 
-## 2. Install frontend dependencies
+## 2. Install Frontend Dependencies
 
 From the project root:
 
-bash
+```bash
 npm install
-
+```
 
 ---
 
-## 3. Install backend dependencies
+## 3. Install Backend Dependencies
 
 ```bash
 cd server
@@ -320,9 +319,9 @@ npm install
 
 ---
 
-## 4. Configure environment variables
+## 4. Configure Environment Variables
 
-Create a `.env` file inside the `server` directory.
+Create the required `.env` file inside the `server` directory.
 
 Example:
 
@@ -331,13 +330,13 @@ MONGO_URI=your_mongodb_connection_string
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
-Use the exact environment-variable names required by the current backend configuration.
+Add any additional AI credentials required by the current backend configuration.
 
 ### ⚠️ Important
 
 **Never commit your `.env` file or API keys to GitHub.**
 
-The repository already ignores:
+The repository ignores:
 
 ```text
 .env
@@ -346,7 +345,7 @@ server/.env
 
 ---
 
-## 5. Start the backend
+## 5. Start the Backend
 
 From the `server` directory:
 
@@ -362,7 +361,7 @@ http://localhost:5000
 
 ---
 
-## 6. Start the frontend
+## 6. Start the Frontend
 
 Open another terminal and return to the project root:
 
@@ -407,10 +406,10 @@ npm run preview
 
 BizAssist uses environment variables for sensitive configuration.
 
-The public repository should **never contain**:
+The public repository should never contain:
 
 * API keys
-* MongoDB connection strings
+* MongoDB credentials
 * Passwords
 * Private credentials
 * `.env` files
@@ -463,7 +462,7 @@ BizAssist can be extended with:
 * Advanced document understanding
 * Automated business insights
 
-### Long-term vision
+### Long-term Vision
 
 The goal is to evolve BizAssist from a business record-management tool into a **digital operating assistant for small businesses**.
 
@@ -475,7 +474,7 @@ BizAssist AI explores how **AI can simplify everyday operational and financial w
 
 The project focuses on combining:
 
-**AI + Voice + Business Data + Payments + Automation**
+**AI + Voice + Business Data + Payment Tracking + Automation**
 
 to create a practical assistant for businesses that traditionally rely on manual record keeping.
 
