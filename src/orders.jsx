@@ -1,351 +1,687 @@
 import { useEffect, useState } from "react";
 
-function Orders({ onBack }) {
+const API_URL = "http://localhost:5000";
+
+function Orders({ onBack, onNavigate }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchOrders = async () => {
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({});
+  const [savingId, setSavingId] = useState(null);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  const loadOrders = async () => {
     try {
       setLoading(true);
       setError("");
 
+      console.log("Fetching orders from:", `${API_URL}/api/orders`);
+
+      const response = await fetch(`${API_URL}/api/orders`);
+
+      console.log("Orders response status:", response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+
+        console.error("Server response:", errorText);
+
+        throw new Error(
+          `Failed to fetch orders (${response.status})`
+        );
+      }
+
+      const data = await response.json();
+
+      console.log("Orders received:", data);
+
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid orders data received from server.");
+      }
+
+      setOrders(data);
+    } catch (err) {
+      console.error("ORDERS ERROR:", err);
+
+      setError(
+        err.message ||
+          "Could not load orders. Make sure the backend is running."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const money = (value) =>
+    Number(value || 0).toLocaleString("en-IN");
+
+  const getTotal = (order) =>
+    Number(order.price || 0) *
+    Number(order.quantity || 1);
+
+  const getPaid = (order) =>
+    Number(order.amountPaid || 0);
+
+  const getPending = (order) =>
+    Math.max(
+      0,
+      getTotal(order) - getPaid(order)
+    );
+
+  const startEdit = (order) => {
+    setEditingId(order._id);
+
+    setEditData({
+      customerName: order.customerName || "",
+      product: order.product || "",
+      quantity: order.quantity || 1,
+      price: order.price || 0,
+      deliveryDate: order.deliveryDate || "",
+      status: order.status || "Pending",
+      amountPaid: order.amountPaid || 0,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditData({});
+  };
+
+  const updateField = (field, value) => {
+    setEditData((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const saveEdit = async (orderId) => {
+    try {
+      setSavingId(orderId);
+
+      const quantity = Number(editData.quantity);
+      const price = Number(editData.price);
+      const amountPaid = Number(editData.amountPaid);
+
+      if (!editData.customerName.trim()) {
+        alert("Customer name is required.");
+        return;
+      }
+
+      if (!editData.product.trim()) {
+        alert("Product is required.");
+        return;
+      }
+
+      if (quantity <= 0 || Number.isNaN(quantity)) {
+        alert("Quantity must be greater than 0.");
+        return;
+      }
+
+      if (price < 0 || Number.isNaN(price)) {
+        alert("Price cannot be negative.");
+        return;
+      }
+
+      if (amountPaid < 0 || Number.isNaN(amountPaid)) {
+        alert("Amount paid cannot be negative.");
+        return;
+      }
+
+      const total = price * quantity;
+
+      if (amountPaid > total) {
+        alert(
+          "Amount paid cannot be greater than order total."
+        );
+        return;
+      }
+
       const response = await fetch(
-        "http://localhost:5000/api/orders"
+        `${API_URL}/api/orders/${orderId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            customerName: editData.customerName.trim(),
+            product: editData.product.trim(),
+            quantity,
+            price,
+            deliveryDate: editData.deliveryDate.trim(),
+            status: editData.status,
+            amountPaid,
+          }),
+        }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Failed to load orders"
+          data.message || "Failed to update order."
         );
       }
 
-      setOrders(data);
-      setLoading(false);
-    } catch (error) {
-      console.error(error);
-      setError(error.message);
-      setLoading(false);
+      setOrders((previous) =>
+        previous.map((order) =>
+          order._id === orderId
+            ? data.order
+            : order
+        )
+      );
+
+      setEditingId(null);
+      setEditData({});
+    } catch (err) {
+      console.error("UPDATE ORDER ERROR:", err);
+
+      alert(
+        err.message ||
+          "Could not update order."
+      );
+    } finally {
+      setSavingId(null);
     }
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const totalValue = orders.reduce(
-    (total, order) =>
-      total +
-      Number(order.price || 0) *
-        Number(order.quantity || 1),
-    0
-  );
-
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f7f8fc",
-        padding: "25px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "1100px",
-          margin: "0 auto",
-        }}
-      >
+    <div className="app">
 
-        {/* HEADER */}
+      <header className="header">
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "30px",
-          }}
-        >
+        <div>
+
+          <button
+            onClick={onBack}
+            className="orders-back-button"
+          >
+            ← Back
+          </button>
+
+          <h1>Orders</h1>
+
+          <p className="greeting">
+            Manage all your orders
+          </p>
+
+        </div>
+
+        <div className="profile">
+          📋
+        </div>
+
+      </header>
+
+      <main className="orders-main">
+
+        <section className="orders-summary-card">
+
           <div>
-            <button
-              onClick={onBack}
-              style={{
-                border: "none",
-                background: "none",
-                fontSize: "15px",
-                cursor: "pointer",
-                marginBottom: "10px",
-              }}
-            >
-              ← Back
-            </button>
+            <h2>All Orders</h2>
 
-            <h1
-              style={{
-                margin: 0,
-                fontSize: "28px",
-              }}
-            >
-              Order History
-            </h1>
-
-            <p
-              style={{
-                color: "#687386",
-                marginTop: "6px",
-              }}
-            >
-              All orders recorded in BizAssist
+            <p>
+              {orders.length}{" "}
+              {orders.length === 1
+                ? "order"
+                : "orders"}
             </p>
           </div>
 
           <button
-            onClick={fetchOrders}
-            style={{
-              padding: "11px 18px",
-              border: "none",
-              borderRadius: "10px",
-              background: "#5367d9",
-              color: "white",
-              cursor: "pointer",
-              fontWeight: "600",
-            }}
+            onClick={loadOrders}
+            className="refresh-button"
           >
             ↻ Refresh
           </button>
-        </div>
 
-        {/* SUMMARY CARDS */}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "15px",
-            marginBottom: "25px",
-          }}
-        >
-          <div
-            style={{
-              background: "white",
-              padding: "20px",
-              borderRadius: "15px",
-              boxShadow:
-                "0 2px 10px rgba(0,0,0,0.05)",
-            }}
-          >
-            <p
-              style={{
-                color: "#687386",
-                margin: 0,
-              }}
-            >
-              Total Orders
-            </p>
-
-            <h2
-              style={{
-                margin: "8px 0 0",
-              }}
-            >
-              {orders.length}
-            </h2>
-          </div>
-
-          <div
-            style={{
-              background: "white",
-              padding: "20px",
-              borderRadius: "15px",
-              boxShadow:
-                "0 2px 10px rgba(0,0,0,0.05)",
-            }}
-          >
-            <p
-              style={{
-                color: "#687386",
-                margin: 0,
-              }}
-            >
-              Total Order Value
-            </p>
-
-            <h2
-              style={{
-                margin: "8px 0 0",
-              }}
-            >
-              ₹{totalValue.toLocaleString("en-IN")}
-            </h2>
-          </div>
-        </div>
-
-        {/* ERROR */}
+        </section>
 
         {error && (
-          <div
-            style={{
-              background: "#fff1f1",
-              color: "#c24141",
-              padding: "15px",
-              borderRadius: "10px",
-              marginBottom: "20px",
-            }}
-          >
+          <div className="orders-error">
             {error}
-          </div>
-        )}
 
-        {/* LOADING */}
-
-        {loading && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "50px",
-              color: "#687386",
-            }}
-          >
-            Loading orders...
-          </div>
-        )}
-
-        {/* EMPTY */}
-
-        {!loading && orders.length === 0 && (
-          <div
-            style={{
-              background: "white",
-              padding: "50px",
-              textAlign: "center",
-              borderRadius: "15px",
-            }}
-          >
-            <div
+            <button
+              onClick={loadOrders}
               style={{
-                fontSize: "45px",
+                marginLeft: "10px",
+                cursor: "pointer",
               }}
             >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+
+          <div className="orders-empty">
+            Loading orders...
+          </div>
+
+        ) : orders.length === 0 ? (
+
+          <div className="orders-empty">
+
+            <div className="empty-icon">
               📦
             </div>
 
             <h2>No orders yet</h2>
 
-            <p
-              style={{
-                color: "#687386",
-              }}
-            >
-              Record your first order using
-              BizAssist.
+            <p>
+              Record your first order
+              from the Home page.
             </p>
+
           </div>
-        )}
 
-        {/* ORDERS */}
+        ) : (
 
-        {!loading && orders.length > 0 && (
-          <div
-            style={{
-              background: "white",
-              borderRadius: "15px",
-              overflow: "hidden",
-              boxShadow:
-                "0 2px 10px rgba(0,0,0,0.05)",
-            }}
-          >
-            {orders.map((order) => (
-              <div
-                key={order._id}
-                style={{
-                  padding: "20px",
-                  borderBottom:
-                    "1px solid #edf0f5",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent:
-                      "space-between",
-                    gap: "15px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <h3
-                      style={{
-                        margin: 0,
-                      }}
-                    >
-                      {order.customerName}
-                    </h3>
+          <div className="orders-list">
 
-                    <p
-                      style={{
-                        margin:
-                          "6px 0",
-                        color: "#687386",
-                      }}
-                    >
-                      {order.quantity} ×{" "}
-                      {order.product}
-                    </p>
-                  </div>
+            {orders.map((order) => {
 
-                  <div
-                    style={{
-                      textAlign: "right",
-                    }}
-                  >
-                    <strong>
-                      ₹
-                      {(
-                        Number(order.price || 0) *
-                        Number(
-                          order.quantity || 1
-                        )
-                      ).toLocaleString("en-IN")}
-                    </strong>
+              const total = getTotal(order);
+              const paid = getPaid(order);
+              const pending = getPending(order);
+              const isEditing =
+                editingId === order._id;
 
-                    <p
-                      style={{
-                        margin:
-                          "6px 0 0",
-                        color: "#687386",
-                      }}
-                    >
-                      Delivery:{" "}
-                      {order.deliveryDate ||
-                        "Not specified"}
-                    </p>
-                  </div>
-                </div>
+              return (
 
                 <div
-                  style={{
-                    marginTop: "12px",
-                    display: "inline-block",
-                    padding:
-                      "5px 10px",
-                    borderRadius: "20px",
-                    background: "#fff7e6",
-                    color: "#a66a00",
-                    fontSize: "12px",
-                    fontWeight: "600",
-                  }}
+                  className={`full-order-card ${
+                    isEditing
+                      ? "editing-order"
+                      : ""
+                  }`}
+                  key={order._id}
                 >
-                  {order.status ||
-                    "Pending"}
+
+                  <div className="order-top">
+
+                    <div className="customer-block">
+
+                      {isEditing ? (
+
+                        <input
+                          className="edit-input customer-input"
+                          value={
+                            editData.customerName
+                          }
+                          onChange={(e) =>
+                            updateField(
+                              "customerName",
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      ) : (
+
+                        <h2>
+                          {order.customerName ||
+                            "Unknown Customer"}
+                        </h2>
+
+                      )}
+
+                      {isEditing ? (
+
+                        <input
+                          className="edit-input"
+                          value={editData.product}
+                          onChange={(e) =>
+                            updateField(
+                              "product",
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      ) : (
+
+                        <p>
+                          {order.product ||
+                            "Unknown product"}
+                        </p>
+
+                      )}
+
+                    </div>
+
+                    <div className="order-total">
+
+                      <span>Total</span>
+
+                      <strong>
+                        ₹{money(total)}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <div className="order-details-grid">
+
+                    <div className="detail-box">
+
+                      <span>Price</span>
+
+                      {isEditing ? (
+
+                        <input
+                          className="edit-input"
+                          type="number"
+                          min="0"
+                          value={editData.price}
+                          onChange={(e) =>
+                            updateField(
+                              "price",
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      ) : (
+
+                        <strong>
+                          ₹{money(order.price)}
+                        </strong>
+
+                      )}
+
+                    </div>
+
+                    <div className="detail-box">
+
+                      <span>Quantity</span>
+
+                      {isEditing ? (
+
+                        <input
+                          className="edit-input"
+                          type="number"
+                          min="1"
+                          value={
+                            editData.quantity
+                          }
+                          onChange={(e) =>
+                            updateField(
+                              "quantity",
+                              e.target.value
+                            )
+                          }
+                        />
+
+                      ) : (
+
+                        <strong>
+                          {order.quantity || 1}
+                        </strong>
+
+                      )}
+
+                    </div>
+
+                    <div className="detail-box">
+
+                      <span>Delivery</span>
+
+                      {isEditing ? (
+
+                        <input
+                          className="edit-input"
+                          value={
+                            editData.deliveryDate
+                          }
+                          onChange={(e) =>
+                            updateField(
+                              "deliveryDate",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g. Tomorrow"
+                        />
+
+                      ) : (
+
+                        <strong>
+                          {order.deliveryDate ||
+                            "Not specified"}
+                        </strong>
+
+                      )}
+
+                    </div>
+
+                    <div className="detail-box">
+
+                      <span>Status</span>
+
+                      {isEditing ? (
+
+                        <select
+                          className="edit-input status-select"
+                          value={editData.status}
+                          onChange={(e) =>
+                            updateField(
+                              "status",
+                              e.target.value
+                            )
+                          }
+                        >
+
+                          <option>
+                            Pending
+                          </option>
+
+                          <option>
+                            In Progress
+                          </option>
+
+                          <option>
+                            Completed
+                          </option>
+
+                          <option>
+                            Cancelled
+                          </option>
+
+                        </select>
+
+                      ) : (
+
+                        <span
+                          className={`status-badge ${
+                            String(
+                              order.status ||
+                                "Pending"
+                            )
+                              .toLowerCase()
+                              .replace(
+                                " ",
+                                "-"
+                              )
+                          }`}
+                        >
+                          {order.status ||
+                            "Pending"}
+                        </span>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+                  <div className="payment-section">
+
+                    <div className="payment-item">
+
+                      <span>
+                        Amount Paid
+                      </span>
+
+                      {isEditing ? (
+
+                        <div className="amount-edit">
+
+                          <span>₹</span>
+
+                          <input
+                            className="edit-input amount-input"
+                            type="number"
+                            min="0"
+                            max={total}
+                            value={
+                              editData.amountPaid
+                            }
+                            onChange={(e) =>
+                              updateField(
+                                "amountPaid",
+                                e.target.value
+                              )
+                            }
+                          />
+
+                        </div>
+
+                      ) : (
+
+                        <strong>
+                          ₹{money(paid)}
+                        </strong>
+
+                      )}
+
+                    </div>
+
+                    <div className="payment-item">
+
+                      <span>Pending</span>
+
+                      <strong
+                        className={
+                          pending > 0
+                            ? "pending-money"
+                            : "paid-money"
+                        }
+                      >
+                        {pending > 0
+                          ? `₹${money(pending)}`
+                          : "✓ Paid"}
+                      </strong>
+
+                    </div>
+
+                    <div className="payment-status">
+                      {order.paymentStatus ||
+                        "Pending"}
+                    </div>
+
+                  </div>
+
+                  <div className="order-actions">
+
+                    {isEditing ? (
+
+                      <>
+
+                        <button
+                          className="save-order-button"
+                          onClick={() =>
+                            saveEdit(order._id)
+                          }
+                          disabled={
+                            savingId ===
+                            order._id
+                          }
+                        >
+                          {savingId ===
+                          order._id
+                            ? "Saving..."
+                            : "✓ Save Changes"}
+                        </button>
+
+                        <button
+                          className="cancel-order-button"
+                          onClick={cancelEdit}
+                        >
+                          Cancel
+                        </button>
+
+                      </>
+
+                    ) : (
+
+                      <button
+                        className="edit-order-button"
+                        onClick={() =>
+                          startEdit(order)
+                        }
+                      >
+                        ✎ Edit Order
+                      </button>
+
+                    )}
+
+                  </div>
+
                 </div>
-              </div>
-            ))}
+
+              );
+            })}
+
           </div>
+
         )}
-      </div>
+
+      </main>
+
+      <nav className="bottom-nav">
+
+        <button onClick={onBack}>
+          <span>⌂</span>
+          <span>Home</span>
+        </button>
+
+        <button
+          onClick={() =>
+            onNavigate("customers")
+          }
+        >
+          <span>👥</span>
+          <span>Customers</span>
+        </button>
+
+        <button
+          className="active"
+          onClick={() =>
+            onNavigate("orders")
+          }
+        >
+          <span>📋</span>
+          <span>Orders</span>
+        </button>
+
+        <button
+          onClick={() =>
+            onNavigate("payments")
+          }
+        >
+          <span>💰</span>
+          <span>Money</span>
+        </button>
+
+      </nav>
+
     </div>
   );
 }
