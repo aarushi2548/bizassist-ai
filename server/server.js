@@ -1204,14 +1204,16 @@ Rules:
 
             temperature: 0,
 
-            maxOutputTokens: 300,
+            maxOutputTokens: 600,
           },
         });
 
-      const parsed =
-        parseGeminiJSON(
-          response.text?.trim()
-        );
+     console.log("RAW GEMINI PHOTO RESPONSE:", response.text);
+
+const parsed =
+  parseGeminiJSON(
+    response.text?.trim()
+  );
 
       res.json({
         success: true,
